@@ -3,10 +3,20 @@ controllers are who are responsible for the interacting with models
 */
 const { booksTable } = require("../models/book.model");
 const db = require("../db");
-const { eq } = require("drizzle-orm");
+const { eq, ilike } = require("drizzle-orm");
 
 //@named exports
 exports.getAllBooks = async function (req, res) {
+  //@for search by name
+  const search = req.query.search;
+  if (search) {
+    const books = await db
+      .select()
+      .from(booksTable)
+      .where(ilike(booksTable.title, `%${search}%`));
+    return res.json(books);
+  }
+
   const books = await db.select().from(booksTable);
   return res.json(books);
 };
@@ -24,7 +34,7 @@ exports.getBookById = async function (req, res) {
   return res.json(book);
 };
 
-exports.createBook = async function (req, res) { 
+exports.createBook = async function (req, res) {
   const { title, authorId } = req.body;
 
   if (!title || title === "")
@@ -43,7 +53,7 @@ exports.createBook = async function (req, res) {
 exports.deleteBookById = async function (req, res) {
   const id = req.params.id;
 
-  await db.delete(booksTable).where(eq(booksTable.id,id))
+  await db.delete(booksTable).where(eq(booksTable.id, id));
 
   return res.status(200).json({ message: "book deleted" });
 };
